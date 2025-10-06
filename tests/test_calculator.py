@@ -157,6 +157,7 @@ def test_clear_history(calculator):
     assert calculator.redo_stack == []
 
 # Test DataFrame History
+# Added by Greg Hoffer - with help of Claude
 
 def test_get_history_dataframe_empty(calculator):
     """Test get_history_dataframe with empty history."""
@@ -239,6 +240,7 @@ def test_calculator_repl_history_with_calculations(mock_print, mock_input):
     mock_print.assert_any_call("1. Addition(2, 3) = 5")
 
 # Test Interruption Handling
+# Added by Greg Hoffer - with help of Claude
 
 @patch('builtins.input')
 @patch('builtins.print')
