@@ -237,3 +237,88 @@ def test_calculator_repl_history_with_calculations(mock_print, mock_input):
     calculator_repl()
     mock_print.assert_any_call("\nCalculation History:")
     mock_print.assert_any_call("1. Addition(2, 3) = 5")
+
+# Test Interruption Handling
+
+@patch('builtins.input')
+@patch('builtins.print')
+def test_calculator_repl_keyboard_interrupt(mock_print, mock_input):
+    """Test handling of KeyboardInterrupt (Ctrl+C) during command input."""
+    # Setup input to raise KeyboardInterrupt on first call, then exit
+    mock_input.side_effect = [KeyboardInterrupt(), 'exit']
+    
+    calculator_repl()
+    
+    # Verify that the interruption was handled gracefully
+    mock_print.assert_any_call("\nOperation cancelled")
+    mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input')
+@patch('builtins.print')
+def test_calculator_repl_keyboard_interrupt_during_operation(mock_print, mock_input):
+    """Test handling of KeyboardInterrupt during arithmetic operation input."""
+    # Setup input to start an operation, then interrupt on number input
+    mock_input.side_effect = ['add', KeyboardInterrupt(), 'exit']
+    
+    calculator_repl()
+    
+    # Verify that the interruption was handled gracefully
+    mock_print.assert_any_call("\nOperation cancelled")
+    mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input')
+@patch('builtins.print')
+def test_calculator_repl_eof_error(mock_print, mock_input):
+    """Test handling of EOFError (Ctrl+D) during input."""
+    # Setup input to raise EOFError
+    mock_input.side_effect = EOFError()
+    
+    calculator_repl()
+    
+    # Verify that EOFError was handled gracefully
+    mock_print.assert_any_call("\nInput terminated. Exiting...")
+
+@patch('builtins.input')
+@patch('builtins.print')
+def test_calculator_repl_multiple_interrupts(mock_print, mock_input):
+    """Test handling of multiple consecutive interruptions."""
+    # Setup multiple interruptions followed by exit
+    mock_input.side_effect = [
+        KeyboardInterrupt(),  # First interrupt
+        KeyboardInterrupt(),  # Second interrupt  
+        'exit'               # Finally exit
+    ]
+    
+    calculator_repl()
+    
+    # Verify that both interruptions were handled by checking call count
+    operation_cancelled_calls = [call for call in mock_print.call_args_list 
+                               if call.args and call.args[0] == "\nOperation cancelled"]
+    assert len(operation_cancelled_calls) >= 2
+    mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input')
+@patch('builtins.print') 
+def test_calculator_repl_interrupt_during_number_input(mock_print, mock_input):
+    """Test KeyboardInterrupt specifically during number input for operations."""
+    # Start operation, provide first number, then interrupt on second number
+    mock_input.side_effect = ['multiply', '5', KeyboardInterrupt(), 'exit']
+    
+    calculator_repl()
+    
+    # Verify graceful handling
+    mock_print.assert_any_call("\nOperation cancelled")
+    mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input')
+@patch('builtins.print')
+def test_calculator_repl_general_exception_handling(mock_print, mock_input):
+    """Test handling of unexpected exceptions during operation."""
+    # Create a mock that raises a general exception, then exit
+    mock_input.side_effect = [Exception("Unexpected error"), 'exit']
+    
+    calculator_repl()
+    
+    # Verify that the exception was caught and handled
+    mock_print.assert_any_call("Error: Unexpected error")
+    mock_print.assert_any_call("Goodbye!")
