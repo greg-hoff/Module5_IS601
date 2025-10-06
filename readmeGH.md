@@ -12,3 +12,5 @@ wrote more descriptive commits
 checked github actions function
 checked public github status
 filmed video of calculator and test function
+
+06 October 2025
