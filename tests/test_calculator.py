@@ -324,3 +324,55 @@ def test_calculator_repl_general_exception_handling(mock_print, mock_input):
     # Verify that the exception was caught and handled
     mock_print.assert_any_call("Error: Unexpected error")
     mock_print.assert_any_call("Goodbye!")
+
+# Test Fatal Error Handling
+# Added by Greg Hoffer - with help of Claude
+
+@patch('app.calculator_repl.Calculator')
+@patch('app.calculator_repl.logging.error')
+@patch('builtins.print')
+def test_calculator_repl_fatal_initialization_error(mock_print, mock_logging_error, mock_calculator):
+    """Test handling of fatal errors during calculator initialization."""
+    # Make Calculator initialization raise an exception
+    mock_calculator.side_effect = Exception("Fatal initialization error")
+    
+    # The function should raise the exception after logging it
+    with pytest.raises(Exception, match="Fatal initialization error"):
+        calculator_repl()
+    
+    # Verify that the fatal error was reported to user and logged
+    mock_print.assert_any_call("Fatal error: Fatal initialization error")
+    mock_logging_error.assert_called_once_with("Fatal error in calculator REPL: Fatal initialization error")
+
+@patch('app.calculator_repl.Calculator')
+@patch('app.calculator_repl.logging.error')
+@patch('builtins.print')
+def test_calculator_repl_fatal_observer_error(mock_print, mock_logging_error, mock_calculator):
+    """Test handling of fatal errors during observer setup."""
+    # Create a calculator instance that raises error when adding observers
+    mock_calc_instance = Mock()
+    mock_calc_instance.add_observer.side_effect = Exception("Observer setup failed")
+    mock_calculator.return_value = mock_calc_instance
+    
+    # The function should raise the exception after logging it
+    with pytest.raises(Exception, match="Observer setup failed"):
+        calculator_repl()
+    
+    # Verify that the fatal error was reported and logged
+    mock_print.assert_any_call("Fatal error: Observer setup failed")
+    mock_logging_error.assert_called_once_with("Fatal error in calculator REPL: Observer setup failed")
+
+@patch('app.calculator_repl.logging.error')
+@patch('builtins.print')
+def test_calculator_repl_fatal_startup_print_error(mock_print, mock_logging_error):
+    """Test handling of fatal errors during startup print statement."""
+    # Make the initial print statement raise an exception
+    mock_print.side_effect = [Exception("Print system failure"), None, None]
+    
+    # The function should raise the exception after logging it
+    with pytest.raises(Exception, match="Print system failure"):
+        calculator_repl()
+    
+    # Verify that the fatal error was reported and logged
+    mock_print.assert_any_call("Fatal error: Print system failure")
+    mock_logging_error.assert_called_once_with("Fatal error in calculator REPL: Print system failure")
