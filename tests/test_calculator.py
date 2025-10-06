@@ -239,6 +239,53 @@ def test_calculator_repl_history_with_calculations(mock_print, mock_input):
     mock_print.assert_any_call("\nCalculation History:")
     mock_print.assert_any_call("1. Addition(2, 3) = 5")
 
+# Test Load Command
+# Added by Greg Hoffer - with help of Claude
+
+#Added testing for REPL load command because only load history was tested 
+@patch('builtins.input', side_effect=['load', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_load_success(mock_print, mock_input):
+    """Test successful load command in REPL."""
+    with patch('app.calculator.Calculator.load_history') as mock_load_history:
+        calculator_repl()
+        # load_history is called twice: once during initialization, once for the load command
+        assert mock_load_history.call_count == 2
+        mock_print.assert_any_call("History loaded successfully")
+        mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input', side_effect=['load', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_load_failure(mock_print, mock_input):
+    """Test load command failure handling in REPL."""
+    with patch('app.calculator.Calculator.load_history') as mock_load_history:
+        # First call (during init) succeeds, second call (load command) fails
+        mock_load_history.side_effect = [None, Exception("File not found")]
+        calculator_repl()
+        assert mock_load_history.call_count == 2
+        mock_print.assert_any_call("Error loading history: File not found")
+        mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input', side_effect=['load', 'history', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_load_and_view_history(mock_print, mock_input):
+    """Test load command followed by viewing history."""
+    # Mock successful load with some sample data
+    with patch('app.calculator.Calculator.load_history') as mock_load_history:
+        # We'll also need to mock the history to show something after loading
+        with patch('app.calculator.Calculator.show_history') as mock_show_history:
+            mock_show_history.return_value = ["Addition(5, 3) = 8", "Subtraction(10, 2) = 8"]
+            
+            calculator_repl()
+            
+            # load_history called twice: during init and load command
+            assert mock_load_history.call_count == 2
+            mock_print.assert_any_call("History loaded successfully")
+            mock_print.assert_any_call("\nCalculation History:")
+            mock_print.assert_any_call("1. Addition(5, 3) = 8")
+            mock_print.assert_any_call("2. Subtraction(10, 2) = 8")
+            mock_print.assert_any_call("Goodbye!")
+
 # Test Interruption Handling
 # Added by Greg Hoffer - with help of Claude
 
