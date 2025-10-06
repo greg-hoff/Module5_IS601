@@ -286,6 +286,59 @@ def test_calculator_repl_load_and_view_history(mock_print, mock_input):
             mock_print.assert_any_call("2. Subtraction(10, 2) = 8")
             mock_print.assert_any_call("Goodbye!")
 
+# Test Redo Command
+# added by Greg Hoffer - with help of Claude
+
+# Added test for redo command in REPL, only calculator redo method was tested
+@patch('builtins.input', side_effect=['redo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_redo_nothing_to_redo(mock_print, mock_input):
+    """Test redo command when there's nothing to redo."""
+    with patch('app.calculator.Calculator.redo') as mock_redo:
+        mock_redo.return_value = False  # Nothing to redo
+        calculator_repl()
+        mock_redo.assert_called_once()
+        mock_print.assert_any_call("Nothing to redo")
+        mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input', side_effect=['redo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_redo_success(mock_print, mock_input):
+    """Test successful redo command."""
+    with patch('app.calculator.Calculator.redo') as mock_redo:
+        mock_redo.return_value = True  # Successful redo
+        calculator_repl()
+        mock_redo.assert_called_once()
+        mock_print.assert_any_call("Operation redone")
+        mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input', side_effect=['add', '5', '3', 'undo', 'redo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_undo_redo_sequence(mock_print, mock_input):
+    """Test a complete undo/redo sequence in REPL."""
+    # This test doesn't mock the individual methods to test the full flow
+    calculator_repl()
+    
+    # Verify the sequence of operations
+    mock_print.assert_any_call("\nResult: 8")      # Initial calculation
+    mock_print.assert_any_call("Operation undone")  # Undo message
+    mock_print.assert_any_call("Operation redone")  # Redo message
+    mock_print.assert_any_call("Goodbye!")
+
+@patch('builtins.input', side_effect=['undo', 'redo', 'redo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_multiple_redo_attempts(mock_print, mock_input):
+    """Test multiple redo attempts when there's nothing to redo."""
+    calculator_repl()
+    
+    # First undo should show "Nothing to undo"
+    mock_print.assert_any_call("Nothing to undo")
+    # Both redo attempts should show "Nothing to redo"
+    redo_calls = [call for call in mock_print.call_args_list 
+                  if call.args and call.args[0] == "Nothing to redo"]
+    assert len(redo_calls) >= 2
+    mock_print.assert_any_call("Goodbye!")
+
 # Test Interruption Handling
 # Added by Greg Hoffer - with help of Claude
 
