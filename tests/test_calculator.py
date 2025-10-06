@@ -178,3 +178,19 @@ def test_calculator_repl_help(mock_print, mock_input):
 def test_calculator_repl_addition(mock_print, mock_input):
     calculator_repl()
     mock_print.assert_any_call("\nResult: 5")
+
+@patch('builtins.input', side_effect=['clear', 'history', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_history_empty(mock_print, mock_input):
+    """Test history command when no calculations exist."""
+    calculator_repl()
+    mock_print.assert_any_call("History cleared")
+    mock_print.assert_any_call("No calculations in history")
+
+@patch('builtins.input', side_effect=['clear', 'add', '2', '3', 'history', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_history_with_calculations(mock_print, mock_input):
+    """Test history command when calculations exist."""
+    calculator_repl()
+    mock_print.assert_any_call("\nCalculation History:")
+    mock_print.assert_any_call("1. Addition(2, 3) = 5")
