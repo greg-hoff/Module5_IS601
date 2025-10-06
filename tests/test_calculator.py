@@ -156,6 +156,49 @@ def test_clear_history(calculator):
     assert calculator.undo_stack == []
     assert calculator.redo_stack == []
 
+# Test DataFrame History
+
+def test_get_history_dataframe_empty(calculator):
+    """Test get_history_dataframe with empty history."""
+    df = calculator.get_history_dataframe()
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 0
+    # Empty DataFrame may not have columns, but when it does have data, 
+    # it should have the expected columns
+
+def test_get_history_dataframe_with_calculations(calculator):
+    """Test get_history_dataframe with calculations in history."""
+    # Add some calculations to history
+    add_operation = OperationFactory.create_operation('add')
+    calculator.set_operation(add_operation)
+    calculator.perform_operation(2, 3)
+    
+    multiply_operation = OperationFactory.create_operation('multiply')
+    calculator.set_operation(multiply_operation)
+    calculator.perform_operation(4, 5)
+    
+    # Get DataFrame
+    df = calculator.get_history_dataframe()
+    
+    # Verify DataFrame structure and content
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 2
+    assert list(df.columns) == ['operation', 'operand1', 'operand2', 'result', 'timestamp']
+    
+    # Check first calculation
+    assert df.iloc[0]['operation'] == 'Addition'
+    assert df.iloc[0]['operand1'] == '2'
+    assert df.iloc[0]['operand2'] == '3'
+    assert df.iloc[0]['result'] == '5'
+    assert isinstance(df.iloc[0]['timestamp'], datetime.datetime)
+    
+    # Check second calculation
+    assert df.iloc[1]['operation'] == 'Multiplication'
+    assert df.iloc[1]['operand1'] == '4'
+    assert df.iloc[1]['operand2'] == '5'
+    assert df.iloc[1]['result'] == '20'
+    assert isinstance(df.iloc[1]['timestamp'], datetime.datetime)
+
 # Test REPL Commands (using patches for input/output handling)
 
 @patch('builtins.input', side_effect=['exit'])
